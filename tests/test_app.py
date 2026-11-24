@@ -84,23 +84,51 @@ class KnowledgeTestingAppTests(unittest.TestCase):
         self.assertEqual(option_count, 20)
         self.assertEqual([row[0] for row in positions], [0, 1, 2, 3, 4])
 
+    
     def test_three_focus_violations_disqualify_attempt(self):
         self.register_student()
         attempt_id = self.start_first_quiz()
-        for index in range(3):
+
+        for violation_number in range(1, 4):
             response = self.client.post(
                 f"/quiz/{attempt_id}/violation",
                 json={"event_type": "tab_hidden", "answers": {}},
             )
             self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.get_json()["disqualified"])
+
+            data = response.get_json()
+            self.assertEqual(data["violations"], violation_number)
+            self.assertEqual(data["limit"], 3)
+
+            if violation_number < 3:
+                self.assertFalse(data["disqualified"])
+
+                with self.app.app_context():
+                    attempt = get_db().execute(
+                        "SELECT status FROM attempts WHERE id=?",
+                        (attempt_id,)
+                    ).fetchone()
+
+                self.assertEqual(attempt["status"], "in_progress")
+            else:
+                self.assertTrue(data["disqualified"])
+
         result = self.client.get(f"/result/{attempt_id}")
         self.assertEqual(result.status_code, 200)
-        self.assertIn("Попытка завершена из-за нарушений".encode(), result.data)
+        self.assertIn(
+            "Попытка завершена из-за нарушений".encode(),
+            result.data
+        )
+
         with self.app.app_context():
-            attempt = get_db().execute("SELECT status,violations FROM attempts WHERE id=?", (attempt_id,)).fetchone()
+            attempt = get_db().execute(
+                "SELECT status, violations FROM attempts WHERE id=?",
+                (attempt_id,)
+            ).fetchone()
+
         self.assertEqual(attempt["status"], "disqualified")
         self.assertEqual(attempt["violations"], 3)
+
 
     def test_answers_are_saved_and_visible_to_teacher(self):
         self.register_student()
