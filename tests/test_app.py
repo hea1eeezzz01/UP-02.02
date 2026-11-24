@@ -96,7 +96,7 @@ class KnowledgeTestingAppTests(unittest.TestCase):
         self.assertTrue(response.get_json()["disqualified"])
         result = self.client.get(f"/result/{attempt_id}")
         self.assertEqual(result.status_code, 200)
-        self.assertIn("Нарушение правил".encode(), result.data)
+        self.assertIn("Попытка завершена из-за нарушений".encode(), result.data)
         with self.app.app_context():
             attempt = get_db().execute("SELECT status,violations FROM attempts WHERE id=?", (attempt_id,)).fetchone()
         self.assertEqual(attempt["status"], "disqualified")
