@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Создание теста · Тестум{% endblock %}
+{% block content %}
+<section class="welcome-row">
+  <div>
+    <a class="back-link" href="{{ url_for('teacher_dashboard') }}">← Назад в панель преподавателя</a>
+    <span class="eyebrow" style="margin-top:12px">КОНСТРУКТОР ТЕСТОВ</span>
+    <h1>Создать новый тест</h1>
+    <p class="muted">Добавьте вопросы, четыре варианта ответа и укажите правильный.</p>
+  </div>
+  <div class="welcome-icon">＋</div>
+</section>
+<form method="post" class="builder-form" id="quiz-builder-form">
+  <section class="builder-panel">
+    <div class="section-heading"><div><span class="section-kicker">ШАГ 1</span><h2>Информация о тесте</h2></div></div>
+    <div class="builder-fields">
+      <label>Название теста
+        <input type="text" name="title" maxlength="120" value="{{ form_data.get('title', '') }}" placeholder="Например, Основы алгоритмизации" required>
+      </label>
+      <label>Описание
+        <textarea name="description" rows="3" maxlength="500" placeholder="Кратко опишите темы теста" required>{{ form_data.get('description', '') }}</textarea>
+      </label>
+      <div class="builder-inline">
+        <label>Время на прохождение (минуты)
+          <input type="number" name="duration_minutes" min="1" max="180" value="{{ form_data.get('duration_minutes', '10') }}" required>
+        </label>
+        <label class="publish-toggle"><input type="checkbox" name="is_active" value="1" {% if not form_data or form_data.get('is_active') == '1' %}checked{% endif %}> Опубликовать сразу</label>
+      </div>
+    </div>
+  </section>
+
+  <section class="builder-panel">
+    <div class="section-heading">
+      <div><span class="section-kicker">ШАГ 2</span><h2>Вопросы теста</h2><p class="muted">От 1 до 30 вопросов. У каждого вопроса — четыре варианта ответа.</p></div>
+      <span class="count-chip" id="question-count">{{ question_count }} вопрос(а)</span>
+    </div>
+    {% set texts = form_data.getlist('question_text') if form_data else [] %}
+    {% set opt_a = form_data.getlist('option_a') if form_data else [] %}
+    {% set opt_b = form_data.getlist('option_b') if form_data else [] %}
+    {% set opt_c = form_data.getlist('option_c') if form_data else [] %}
+    {% set opt_d = form_data.getlist('option_d') if form_data else [] %}
+    {% set corrects = form_data.getlist('correct_option') if form_data else [] %}
+    {% set explanations = form_data.getlist('explanation') if form_data else [] %}
+    <div id="questions-container" class="question-builder-list">
+      {% for i in range(question_count) %}
+      <article class="question-builder-card">
+        <div class="builder-card-head"><strong class="builder-question-number">Вопрос {{ i + 1 }}</strong>{% if i > 0 %}<button class="btn btn-ghost btn-small remove-question" type="button">Удалить</button>{% endif %}</div>
+        <label class="builder-full">Текст вопроса
+          <textarea name="question_text" rows="2" maxlength="800" placeholder="Введите вопрос" required>{{ texts[i] if texts|length > i else '' }}</textarea>
+        </label>
+        <div class="options-builder-grid">
+          <label>Вариант A<input name="option_a" maxlength="200" value="{{ opt_a[i] if opt_a|length > i else '' }}" required></label>
+          <label>Вариант B<input name="option_b" maxlength="200" value="{{ opt_b[i] if opt_b|length > i else '' }}" required></label>
+          <label>Вариант C<input name="option_c" maxlength="200" value="{{ opt_c[i] if opt_c|length > i else '' }}" required></label>
+          <label>Вариант D<input name="option_d" maxlength="200" value="{{ opt_d[i] if opt_d|length > i else '' }}" required></label>
+        </div>
+        <div class="builder-inline builder-bottom-row">
+          <label>Правильный ответ
+            <select name="correct_option" required>
+              {% for letter in ['A','B','C','D'] %}<option value="{{ letter }}" {% if corrects|length > i and corrects[i] == letter %}selected{% endif %}>Вариант {{ letter }}</option>{% endfor %}
+            </select>
+          </label>
+          <label class="explanation-field">Пояснение к ответу (необязательно)
+            <input name="explanation" maxlength="1000" value="{{ explanations[i] if explanations|length > i else '' }}" placeholder="Почему этот ответ правильный">
+          </label>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    <button class="btn btn-secondary add-question-button" id="add-question" type="button">＋ Добавить вопрос</button>
+  </section>
+  <div class="builder-actions">
+    <a class="btn btn-ghost" href="{{ url_for('teacher_dashboard') }}">Отмена</a>
+    <button class="btn btn-primary" type="submit">Сохранить тест <span>→</span></button>
+  </div>
+</form>
+
+<template id="question-template">
+  <article class="question-builder-card">
+    <div class="builder-card-head"><strong class="builder-question-number">Новый вопрос</strong><button class="btn btn-ghost btn-small remove-question" type="button">Удалить</button></div>
+    <label class="builder-full">Текст вопроса<textarea name="question_text" rows="2" maxlength="800" placeholder="Введите вопрос" required></textarea></label>
+    <div class="options-builder-grid">
+      <label>Вариант A<input name="option_a" maxlength="200" required></label>
+      <label>Вариант B<input name="option_b" maxlength="200" required></label>
+      <label>Вариант C<input name="option_c" maxlength="200" required></label>
+      <label>Вариант D<input name="option_d" maxlength="200" required></label>
+    </div>
+    <div class="builder-inline builder-bottom-row">
+      <label>Правильный ответ<select name="correct_option" required><option value="A">Вариант A</option><option value="B">Вариант B</option><option value="C">Вариант C</option><option value="D">Вариант D</option></select></label>
+      <label class="explanation-field">Пояснение к ответу (необязательно)<input name="explanation" maxlength="1000" placeholder="Почему этот ответ правильный"></label>
+    </div>
+  </article>
+</template>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/quiz_builder.js') }}"></script>{% endblock %}

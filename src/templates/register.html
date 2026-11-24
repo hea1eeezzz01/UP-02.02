@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Регистрация · Тестум{% endblock %}
+{% block content %}
+<section class="auth-layout auth-layout-single">
+  <div class="auth-card auth-card-wide">
+    <div class="section-kicker">Новый аккаунт</div>
+    <h2>Регистрация студента</h2>
+    <p class="muted">После регистрации вы сможете проходить тесты и смотреть собственные результаты.</p>
+    <form method="post" class="form-stack">
+      <label>ФИО<input name="full_name" type="text" minlength="2" maxlength="100" placeholder="Например, Иванов Иван" required autofocus></label>
+      <label>Логин<input name="username" type="text" minlength="3" maxlength="40" autocomplete="username" placeholder="Придумайте логин" required></label>
+      <label>Пароль<input name="password" type="password" minlength="6" autocomplete="new-password" placeholder="Не менее 6 символов" required></label>
+      <button class="btn btn-primary btn-wide" type="submit">Создать аккаунт <span>→</span></button>
+    </form>
+    <div class="auth-bottom">Уже зарегистрированы? <a href="{{ url_for('login') }}">Войти</a></div>
+  </div>
+</section>
+{% endblock %}

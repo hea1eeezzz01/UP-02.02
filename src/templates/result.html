@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Результат теста · Тестум{% endblock %}
+{% block content %}
+<section class="result-hero">
+  <div class="result-mark {{ 'result-bad' if attempt.status == 'disqualified' else '' }}">{{ '!' if attempt.status == 'disqualified' else '✓' }}</div>
+  <span class="eyebrow">РЕЗУЛЬТАТ ТЕСТИРОВАНИЯ</span>
+  <h1>{{ attempt.title }}</h1>
+  <p class="muted">{{ attempt.student_name }} · {{ attempt.finished_at|datetime_local }}</p>
+  <div class="score-number">{{ attempt.score }}<span> / {{ attempt.total }}</span></div>
+  <div class="score-caption">{{ percent }}% правильных ответов</div>
+  <div class="score-track"><span style="width:{{ percent }}%"></span></div>
+  <div class="result-tags">
+    <span class="status-chip {{ 'status-danger' if attempt.status == 'disqualified' else 'status-soft' }}">{{ {'completed':'Тест завершён','time_expired':'Время истекло','disqualified':'Попытка завершена из-за нарушений'}.get(attempt.status,attempt.status) }}</span>
+    <span class="status-chip status-soft">Время: {{ attempt.time_taken_seconds|duration }}</span>
+    <span class="status-chip {{ 'status-danger' if attempt.violations else 'status-soft' }}">Нарушения: {{ attempt.violations }}</span>
+  </div>
+  <div class="result-actions"><a class="btn btn-primary" href="{{ url_for('export_result_pdf', attempt_id=attempt.id) }}" download="result_{{ attempt.id }}.pdf">Скачать PDF <span>↓</span></a>{% if current_user.role == 'teacher' %}<a class="btn btn-secondary" href="{{ url_for('teacher_dashboard') }}">К панели преподавателя</a>{% else %}<a class="btn btn-secondary" href="{{ url_for('student_dashboard') }}">Вернуться к тестам</a>{% endif %}</div>
+</section>
+<section class="section-block result-review">
+  <div class="section-heading"><div><span class="section-kicker">РАЗБОР</span><h2>Ваши ответы</h2></div></div>
+  {% for item in review %}
+  <article class="review-card {{ 'review-correct' if item.is_correct else 'review-wrong' }}">
+    <div class="review-status">{{ '✓' if item.is_correct else '×' }}</div>
+    <div class="review-body"><h3>{{ loop.index }}. {{ item.question }}</h3><p><span>Ваш ответ:</span> {{ item.selected }}</p><p><span>Правильный ответ:</span> {{ item.correct }}</p><div class="explanation">{{ item.explanation }}</div></div>
+  </article>
+  {% else %}<div class="empty-state">Нет сохранённых ответов для разбора.</div>{% endfor %}
+</section>
+{% endblock %}

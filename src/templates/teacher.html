@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Панель преподавателя · Тестум{% endblock %}
+{% block content %}
+<section class="welcome-row">
+  <div><span class="eyebrow">ПАНЕЛЬ ПРЕПОДАВАТЕЛЯ</span><h1>Панель преподавателя</h1><p class="muted">Создавайте тесты, контролируйте результаты и анализируйте сложные вопросы.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('create_quiz') }}">＋ Создать тест</a>
+</section>
+<section class="section-block teacher-quizzes">
+  <div class="section-heading"><div><span class="section-kicker">УПРАВЛЕНИЕ КОНТЕНТОМ</span><h2>Управление тестами</h2></div><span class="count-chip">{{ quizzes|length }} тестов</span></div>
+  {% if quizzes %}
+  <div class="table-wrap"><table><thead><tr><th>Название теста</th><th>Вопросов</th><th>Время</th><th>Статус</th><th>Действие</th></tr></thead><tbody>
+    {% for quiz in quizzes %}<tr>
+      <td><span class="table-main">{{ quiz.title }}</span><small class="table-sub">{{ quiz.description }}</small></td>
+      <td>{{ quiz.question_count }}</td><td>{{ quiz.duration_seconds // 60 }} мин</td>
+      <td><span class="status-chip {{ 'status-active' if quiz.is_active else 'status-soft' }}">{{ 'Опубликован' if quiz.is_active else 'Черновик' }}</span></td>
+      <td><form method="post" action="{{ url_for('toggle_quiz', quiz_id=quiz.id) }}"><button class="btn btn-small {{ 'btn-ghost' if quiz.is_active else 'btn-secondary' }}" type="submit">{{ 'Снять с публикации' if quiz.is_active else 'Опубликовать' }}</button></form></td>
+    </tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<div class="empty-state">Вы ещё не создали тесты. Нажмите «Создать тест», чтобы добавить первый.</div>{% endif %}
+</section>
+<section class="metric-grid">
+  <article class="metric-card"><span>Завершённых попыток</span><strong>{{ stats.attempts or 0 }}</strong><small>Всего сохранено в системе</small></article>
+  <article class="metric-card"><span>Студентов</span><strong>{{ stats.students or 0 }}</strong><small>Уникальные участники</small></article>
+  <article class="metric-card"><span>Средний результат</span><strong>{{ (stats.average_score|string + '%') if stats.average_score is not none else '—' }}</strong><small>По всем завершённым тестам</small></article>
+</section>
+<section class="section-block">
+  <div class="section-heading"><div><span class="section-kicker">УСПЕВАЕМОСТЬ</span><h2>Результаты прохождения</h2></div><span class="count-chip">Последние 100 попыток</span></div>
+  {% if results %}
+  <div class="table-wrap"><table><thead><tr><th>Студент</th><th>Тест</th><th>Дата</th><th>Результат</th><th>Нарушения</th><th>Статус</th><th>Отчёт</th></tr></thead><tbody>
+    {% for item in results %}<tr>
+      <td><span class="table-main">{{ item.full_name }}</span><small class="table-sub">@{{ item.username }}</small></td>
+      <td>{{ item.title }}</td><td>{{ item.finished_at|datetime_local }}</td>
+      <td><strong>{{ item.score }}/{{ item.total }}</strong><small class="table-sub">{{ ((100*item.score/item.total)|round)|int if item.total else 0 }}%</small></td>
+      <td>{{ item.violations }}</td>
+      <td><span class="status-chip {{ 'status-danger' if item.status == 'disqualified' else 'status-soft' }}">{{ {'completed':'Завершён','time_expired':'Время истекло','disqualified':'Нарушение правил'}.get(item.status,item.status) }}</span></td>
+      <td><a class="table-link" href="{{ url_for('result', attempt_id=item.id) }}">Открыть</a><span class="table-sub"><a class="table-link" href="{{ url_for('export_result_pdf', attempt_id=item.id) }}">PDF ↓</a></span></td>
+    </tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<div class="empty-state">Здесь появятся результаты после того, как студенты пройдут тесты.</div>{% endif %}
+</section>
+<section class="section-block">
+  <div class="section-heading"><div><span class="section-kicker">АНАЛИТИКА</span><h2>Статистика по вопросам</h2><p class="muted">Сложность рассчитывается по доле правильных ответов студентов.</p></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Вопрос</th><th>Тест</th><th>Ответов</th><th>Правильно</th><th>Сложность</th></tr></thead><tbody>
+    {% for item in difficult %}<tr><td class="question-cell">{{ item.question_text }}</td><td>{{ item.quiz_title }}</td><td>{{ item.answers_count }}</td><td>{% if item.accuracy is not none %}{{ item.accuracy }}%{% else %}—{% endif %}</td><td><span class="status-chip {{ 'status-danger' if item.accuracy is not none and item.accuracy < 50 else 'status-active' if item.accuracy is not none and item.accuracy >= 75 else 'status-soft' }}">{{ item.difficulty }}</span></td></tr>
+    {% else %}<tr><td colspan="5">Нет вопросов для анализа.</td></tr>{% endfor %}
+  </tbody></table></div>
+  <p class="table-footnote">Сложный вопрос — менее 50% правильных ответов; средняя сложность — от 50% до 74%; лёгкий — от 75%.</p>
+</section>
+{% endblock %}

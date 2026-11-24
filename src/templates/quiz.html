@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}{{ quiz.title }} · Тестум{% endblock %}
+{% block head %}<meta name="robots" content="noindex,nofollow">{% endblock %}
+{% block content %}
+<div class="quiz-page" id="quiz-app" data-remaining="{{ remaining }}" data-attempt-id="{{ attempt.id }}" data-violation-limit="3">
+  <div class="quiz-header">
+    <div><a class="back-link" href="{{ url_for('student_dashboard') }}" onclick="return confirm('Вы действительно хотите покинуть тест? Текущая попытка может быть потеряна.')">← В кабинет</a><h1>{{ quiz.title }}</h1><p class="muted">Вопросы перемешаны. Время ограничено. Не переключайте вкладки.</p></div>
+    <div class="timer-card"><span>ОСТАЛОСЬ ВРЕМЕНИ</span><strong id="timer">--:--</strong><small>Автоотправка по окончании</small></div>
+  </div>
+  <div class="quiz-progress"><div class="progress-track"><span id="progress-fill" style="width:0%"></span></div><div class="progress-label"><span id="answered-count">0 из {{ questions|length }} отвечено</span><span>Попытка №{{ attempt.id }}</span></div></div>
+  <div class="rule-banner"><span>ⓘ</span><div><strong>Правила тестирования</strong><p>Не переключайте вкладки и не сворачивайте окно. Система фиксирует потерю фокуса. После 3 нарушений тест будет автоматически завершён.</p></div></div>
+  <form id="quiz-form" method="post" action="{{ url_for('submit_quiz', attempt_id=attempt.id) }}">
+    {% for question in questions %}
+    <section class="question-card" data-question="{{ question.id }}">
+      <div class="question-top"><span class="question-number">ВОПРОС {{ '%02d'|format(loop.index) }}</span><span class="question-counter">{{ loop.index }} / {{ questions|length }}</span></div>
+      <h2>{{ question.text }}</h2>
+      <div class="option-list">
+        {% for option in question.options %}
+        <label class="option-row"><input type="radio" name="q_{{ question.id }}" value="{{ option.value }}"><span class="option-letter">{{ option.display_letter }}</span><span class="option-text">{{ option.label }}</span><span class="option-check">✓</span></label>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+    <div class="quiz-submit-row"><span class="muted">Проверьте ответы перед отправкой.</span><button class="btn btn-primary" type="submit" id="submit-button">Завершить тест <span>→</span></button></div>
+  </form>
+  <div class="quiz-overlay" id="start-overlay"><div class="overlay-card"><span class="overlay-symbol">◷</span><span class="eyebrow">ТЕСТ ГОТОВ К НАЧАЛУ</span><h2>Внимательно прочитайте правила</h2><p>Включите полноэкранный режим. Переключение вкладок и потеря фокуса фиксируются системой.</p><button class="btn btn-primary btn-wide" type="button" id="begin-test">Начать тестирование <span>→</span></button></div></div>
+  <div class="violation-toast" id="violation-toast" aria-live="polite"></div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/quiz.js') }}"></script>{% endblock %}

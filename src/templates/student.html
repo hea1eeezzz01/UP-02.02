@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Мои тесты · Тестум{% endblock %}
+{% block content %}
+<section class="welcome-row">
+  <div><span class="eyebrow">ЛИЧНЫЙ КАБИНЕТ СТУДЕНТА</span><h1>Привет, {{ current_user.full_name.split(' ')[0] }}!</h1><p class="muted">Выберите тест и проверьте свои знания.</p></div>
+  <div class="welcome-icon">✦</div>
+</section>
+<section class="section-block">
+  <div class="section-heading"><div><span class="section-kicker">КАТАЛОГ</span><h2>Доступные тесты</h2></div><span class="count-chip">{{ quizzes|length }} тестов</span></div>
+  <div class="quiz-grid">
+    {% for quiz in quizzes %}
+    <article class="quiz-card">
+      <div class="quiz-card-top"><span class="quiz-icon">{% if loop.index == 1 %}Py{% elif loop.index == 2 %}&lt;/&gt;{% elif loop.index == 3 %}JS{% elif loop.index == 4 %}DB{% elif loop.index == 5 %}Git{% else %}Fl{% endif %}</span><span class="status-chip status-active">Доступен</span></div>
+      <h3>{{ quiz.title }}</h3><p>{{ quiz.description }}</p>
+      <div class="quiz-meta"><span>◷ {{ quiz.duration_seconds // 60 }} мин</span><span>▤ {{ quiz.question_count }} вопросов</span></div>
+      <form method="post" action="{{ url_for('start_quiz', quiz_id=quiz.id) }}"><button class="btn btn-primary btn-wide" type="submit">Начать тест <span>→</span></button></form>
+    </article>
+    {% else %}<div class="empty-state">Пока нет доступных тестов.</div>{% endfor %}
+  </div>
+</section>
+<section class="section-block">
+  <div class="section-heading"><div><span class="section-kicker">ВАШ ПРОГРЕСС</span><h2>Последние результаты</h2></div></div>
+  {% if attempts %}
+  <div class="table-wrap"><table><thead><tr><th>Тест</th><th>Дата</th><th>Баллы</th><th>Статус</th><th></th></tr></thead><tbody>
+    {% for item in attempts %}<tr><td class="table-main">{{ item.title }}</td><td>{{ item.finished_at|datetime_local }}</td><td><strong>{{ item.score }}/{{ item.total }}</strong></td><td><span class="status-chip {{ 'status-danger' if item.status == 'disqualified' else 'status-soft' }}">{{ {'completed':'Завершён','time_expired':'Время истекло','disqualified':'Нарушение правил'}.get(item.status,item.status) }}</span></td><td><a class="table-link" href="{{ url_for('result', attempt_id=item.id) }}">Подробнее →</a></td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<div class="empty-state">Вы ещё не проходили тесты. Начните с любого теста выше.</div>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Вход · Тестум{% endblock %}
+{% block content %}
+<section class="auth-layout">
+  <div class="auth-intro">
+    <span class="eyebrow">ПЛАТФОРМА ОБУЧЕНИЯ</span>
+    <h1>Проверь знания.<br><span>Увидь результат.</span></h1>
+    <p>Проходи тесты с ограничением времени, отслеживай прогресс и разбирай ошибки.</p>
+    <div class="auth-features"><span>◷ Таймер</span><span>↗ Статистика</span><span>✓ История результатов</span></div>
+  </div>
+  <div class="auth-card">
+    <div class="section-kicker">С возвращением</div>
+    <h2>Войти в аккаунт</h2>
+    <p class="muted">Введите логин и пароль для продолжения.</p>
+    <form method="post" class="form-stack">
+      <label>Логин<input name="username" type="text" autocomplete="username" placeholder="Введите логин" required autofocus></label>
+      <label>Пароль<input name="password" type="password" autocomplete="current-password" placeholder="Введите пароль" required></label>
+      <button class="btn btn-primary btn-wide" type="submit">Войти <span>→</span></button>
+    </form>
+    <div class="auth-bottom">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a></div>
+    <div class="demo-note"><strong>Демонстрационный аккаунт преподавателя</strong><br>Логин: <code>teacher</code> · Пароль: <code>teacher123</code><br><br><strong>Демонстрационный аккаунт студента</strong><br>Логин: <code>student</code> · Пароль: <code>student123</code></div>
+  </div>
+</section>
+{% endblock %}
